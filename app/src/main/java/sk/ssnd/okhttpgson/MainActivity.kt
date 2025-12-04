@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import coil3.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -21,7 +23,7 @@ import retrofit2.create
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-// GET -> https://dummyjson.com/users/???
+// GET -> https://dummyjson.com/users/2
 
 val retrofit = Retrofit.Builder()
   .client(OkHttpClient())
@@ -71,6 +73,13 @@ class MainActivity : ComponentActivity() {
 
         val user = response.value
         if (user != null) {
+          AsyncImage(
+            model = user.image,
+            placeholder = painterResource(R.drawable.ic_launcher_foreground),
+            error = painterResource(R.drawable.ic_launcher_foreground),
+            fallback = painterResource(R.drawable.ic_launcher_foreground),
+            contentDescription = null,
+          )
           Text("${user.firstName} ${user.lastName}")
           Text(user.email)
           Text(user.address.city)
