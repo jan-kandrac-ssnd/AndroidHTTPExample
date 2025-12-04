@@ -12,25 +12,30 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import okhttp3.Request
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.create
+import retrofit2.http.GET
 
-// GET -> https://dummyjson.com/users/1
+// GET -> https://dummyjson.com/users
 
-// Builder pattern -> OOP design patterns
-fun call(url: String): String {
-  val client = OkHttpClient()
-  val request = Request.Builder()
-    .url(url)
-    .get()
-    .build()
-  val call = client.newCall(request)
-  val response = call.execute()
-  return response.body.string()
+val retrofit = Retrofit.Builder()
+  .client(OkHttpClient())
+  .addConverterFactory(GsonConverterFactory.create())
+  .baseUrl("https://dummyjson.com")
+  .build()
+
+interface DummyJsonService {
+  @GET("users")
+  suspend fun getAllUsers(): UsersResponse
 }
+
+val dummyJsonService = retrofit.create<DummyJsonService>()
+
+data class UsersResponse(val users: List<User>)
 
 data class UserAddress(val city: String)
 
@@ -42,10 +47,6 @@ data class User(
   val image: String,
   val address: UserAddress
 )
-
-fun transformJsonToUser(json: String) : User {
-  return Gson().fromJson(json, User::class.java)
-}
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,8 +60,7 @@ class MainActivity : ComponentActivity() {
 
         Button(onClick = {
           scope.launch(Dispatchers.IO) {
-            val str = call("https://dummyjson.com/users/1")
-            val user = transformJsonToUser(str)
+            val user = dummyJsonService.getAllUsers().users[4]
             response.value = user
           }
         }) { Text("Download") }
