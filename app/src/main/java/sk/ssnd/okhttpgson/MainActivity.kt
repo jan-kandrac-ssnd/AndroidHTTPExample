@@ -12,6 +12,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
@@ -31,6 +32,21 @@ fun call(url: String): String {
   return response.body.string()
 }
 
+data class UserAddress(val city: String)
+
+data class User(
+  val id: Int,
+  val firstName: String,
+  val lastName: String,
+  val email: String,
+  val image: String,
+  val address: UserAddress
+)
+
+fun transformJsonToUser(json: String) : User {
+  return Gson().fromJson(json, User::class.java)
+}
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -39,15 +55,22 @@ class MainActivity : ComponentActivity() {
     setContent {
       Column(modifier = Modifier.systemBarsPadding()) {
         val scope = rememberCoroutineScope()
-        val response = remember { mutableStateOf("") }
+        val response = remember { mutableStateOf<User?>(null) }
 
         Button(onClick = {
           scope.launch(Dispatchers.IO) {
-            response.value = call("https://dummyjson.com/users/1")
+            val str = call("https://dummyjson.com/users/1")
+            val user = transformJsonToUser(str)
+            response.value = user
           }
         }) { Text("Download") }
 
-        Text(response.value)
+        val user = response.value
+        if (user != null) {
+          Text("${user.firstName} ${user.lastName}")
+          Text(user.email)
+          Text(user.address.city)
+        }
       }
     }
   }
