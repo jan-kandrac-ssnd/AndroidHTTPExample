@@ -19,8 +19,9 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.create
 import retrofit2.http.GET
+import retrofit2.http.Path
 
-// GET -> https://dummyjson.com/users
+// GET -> https://dummyjson.com/users/???
 
 val retrofit = Retrofit.Builder()
   .client(OkHttpClient())
@@ -31,6 +32,9 @@ val retrofit = Retrofit.Builder()
 interface DummyJsonService {
   @GET("users")
   suspend fun getAllUsers(): UsersResponse
+
+  @GET("users/{id}")
+  suspend fun getUser(@Path("id") cislo: Int): User
 }
 
 val dummyJsonService = retrofit.create<DummyJsonService>()
@@ -60,7 +64,7 @@ class MainActivity : ComponentActivity() {
 
         Button(onClick = {
           scope.launch(Dispatchers.IO) {
-            val user = dummyJsonService.getAllUsers().users[4]
+            val user = dummyJsonService.getUser(10)
             response.value = user
           }
         }) { Text("Download") }
